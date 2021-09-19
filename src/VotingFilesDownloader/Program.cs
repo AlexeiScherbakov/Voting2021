@@ -1,4 +1,4 @@
-﻿using NHibernate.Linq;
+using NHibernate.Linq;
 using System;
 using System.IO;
 using System.Linq;
@@ -202,8 +202,9 @@ namespace VotingFilesDownloader
 							if (!MemoryExtensions.SequenceEqual<byte>(hash, dbVotingFile.Sha256))
 							{
 								Console.WriteLine("Detected anomaly {0}", file);
+								SaveFile(contract, file + "-anomaly" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), data);
 							}
-							SaveFile(contract, file + "-anomaly" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), data);
+							
 						}
 					}
 
