@@ -1,4 +1,4 @@
-﻿using NHibernate;
+using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Cfg.MappingSchema;
 using NHibernate.Mapping.ByCode;
@@ -20,5 +20,7 @@ namespace VotingFilesDownloader.Database
 		public virtual string FileName { get; set; }
 		public virtual long Length { get; set; }
 		public virtual byte[] Sha256 { get; set; }
+
+		public virtual ISet<DbTransactionInFile> Transactions { get; protected set; } = new HashSet<DbTransactionInFile>();
 	}
 }

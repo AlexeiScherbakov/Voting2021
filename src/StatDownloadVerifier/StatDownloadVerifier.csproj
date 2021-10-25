@@ -6,11 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NHibernate" Version="5.3.10" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Voting2021.FilesUtils\Voting2021.FilesUtils.csproj" />
     <ProjectReference Include="..\VotingFilesDownloader.Database\VotingFilesDownloader.Database.csproj" />
   </ItemGroup>
 

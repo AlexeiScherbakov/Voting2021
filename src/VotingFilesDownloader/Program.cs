@@ -31,7 +31,7 @@ namespace VotingFilesDownloader
 			b.DataSource = dbFileName;
 			var connectionString = b.ToString();
 			bool create = !File.Exists(dbFileName);
-			_votingFilesDatabase = VotingFilesDatabase.Sqlite(connectionString, create);
+			_votingFilesDatabase = VotingFilesDatabase.Sqlite(connectionString, create ? VotingFilesDatabase.Mode.Create : VotingFilesDatabase.Mode.Update);
 			_apiClient = new ApiClient();
 
 			UpdateMetadata(46, 51, 52, 61, 76, 94).Wait();

@@ -1,0 +1,46 @@
+﻿<Window x:Class="Analyzer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Analyzer" xmlns:oxy="http://oxyplot.org/wpf"
+		xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+		mc:Ignorable="d"
+        Title="Analyzer" Height="450" Width="800">
+	<xctk:BusyIndicator x:Name="busy">
+    <DockPanel>
+		<Menu IsMainMenu="True" DockPanel.Dock="Top">
+			<MenuItem Header="Load database file" Click="MenuItem_Click"/>
+		</Menu>
+		<TabControl TabStripPlacement="Left">
+			<TabItem Header="Block timestamp">
+				<oxy:PlotView x:Name="blockTimestamp"/>
+			</TabItem>
+			<TabItem Header="Block timestamp w/o genesis">
+				<oxy:PlotView x:Name="blockTimestamp2"/>
+			</TabItem>
+			<TabItem Header="Block time">
+				<TabControl x:Name="blockTimeTabs">
+					
+				</TabControl>
+			</TabItem>
+			<TabItem Header="Transactions in blocks (all,number)">
+				<oxy:PlotView x:Name="transactionsInBlock"/>
+			</TabItem>
+			<TabItem Header="Transactions in blocks (all,time)">
+				<oxy:PlotView x:Name="transactionsInBlockPerTime"/>
+			</TabItem>
+			<TabItem Header="Transactions in blocks (per shard,number)">
+				<TabControl x:Name="transactionInBlocksTabs">
+
+				</TabControl>
+			</TabItem>
+				<TabItem Header="Transactions in blocks (per shard,time)">
+					<TabControl x:Name="transactionInBlocksTimeTabs">
+
+					</TabControl>
+				</TabItem>
+			</TabControl>
+	</DockPanel>
+	</xctk:BusyIndicator>
+</Window>
