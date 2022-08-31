@@ -34,6 +34,16 @@ namespace VotingFilesDownloader
 			return ret;
 		}
 
+		private static string GetCurrentDirectory()
+		{
+			var path = Path.GetDirectoryName(typeof(Program).Assembly.Location);
+			if (path is null)
+			{
+				path = AppContext.BaseDirectory;
+			}
+
+			return path;
+		}
 
 		private static int RunApp(CommandLineOptions options)
 		{
@@ -43,7 +53,8 @@ namespace VotingFilesDownloader
 			}
 			_redownloadAll = options.RedownloadAll;
 
-			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			var path = GetCurrentDirectory();
+			Console.WriteLine("Current Directory: {0}", path);
 			var dataDirectory = Path.Combine(path, "data");
 			if (!Directory.Exists(dataDirectory))
 			{
@@ -79,9 +90,9 @@ namespace VotingFilesDownloader
 			JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
 			var jwtToken=handler.ReadJwtToken(token);
 			var expiration = jwtToken.Payload.Exp;
-			Console.WriteLine("IssuedAt: {0},Exp={1}",
-				TimeZoneInfo.ConvertTime(new DateTimeOffset(jwtToken.IssuedAt,TimeSpan.Zero), moscowTimeZone),
-				DateTimeOffset.FromUnixTimeSeconds(expiration ?? 0));
+			Console.WriteLine("IssuedAt: {0}, Exp={1}",
+				TimeZoneInfo.ConvertTime(new DateTimeOffset(jwtToken.IssuedAt, TimeSpan.Zero), moscowTimeZone),
+				TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(expiration ?? 0), moscowTimeZone));
 		}
 
 		public static async Task UpdateMetadata(params long[] startRegions)
