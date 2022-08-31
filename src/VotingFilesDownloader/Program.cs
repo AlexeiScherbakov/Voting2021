@@ -1,10 +1,16 @@
+using CommandLine;
+
 using NHibernate.Linq;
+using NHibernate.Mapping;
+
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+
 using VotingFilesDownloader.Api;
 using VotingFilesDownloader.Database;
 
@@ -15,8 +21,28 @@ namespace VotingFilesDownloader
 		private static string _filesDirectory;
 		private static VotingFilesDatabase _votingFilesDatabase;
 		private static ApiClient _apiClient;
-		static void Main(string[] args)
+		private static bool _redownloadAll;
+
+		private static DateTimeOffset _startTime;
+
+		static int Main(string[] args)
 		{
+			_startTime = DateTimeOffset.Now;
+			var parser = new Parser(config => config.HelpWriter = Console.Out);
+			var ret = parser.ParseArguments<CommandLineOptions>(args)
+				.MapResult(x => RunApp(x), err => 1);
+			return ret;
+		}
+
+
+		private static int RunApp(CommandLineOptions options)
+		{
+			if (options.Token is not null)
+			{
+				WriteTokenInfo(options.Token);
+			}
+			_redownloadAll = options.RedownloadAll;
+
 			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var dataDirectory = Path.Combine(path, "data");
 			if (!Directory.Exists(dataDirectory))
@@ -34,8 +60,28 @@ namespace VotingFilesDownloader
 			_votingFilesDatabase = VotingFilesDatabase.Sqlite(connectionString, create ? VotingFilesDatabase.Mode.Create : VotingFilesDatabase.Mode.Update);
 			_apiClient = new ApiClient();
 
-			UpdateMetadata(46, 51, 52, 61, 76, 94).Wait();
+			if (options.Token is not null)
+			{
+				_apiClient.SetAuthorization(options.Token);
+			}
+			
+			UpdateMetadata(39, 40, 46, 53, 60, 70, 76).Wait();
 			DownloadFiles().Wait();
+
+			Console.WriteLine("Время выполнения {0}", DateTimeOffset.Now - _startTime);
+
+			return 0;
+		}
+
+		private static void WriteTokenInfo(string token)
+		{
+			var moscowTimeZone = TimeZoneInfo.CreateCustomTimeZone("Moscow UTC+3", TimeSpan.FromHours(3), "UTC+3", "UTC+3");
+			JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+			var jwtToken=handler.ReadJwtToken(token);
+			var expiration = jwtToken.Payload.Exp;
+			Console.WriteLine("IssuedAt: {0},Exp={1}",
+				TimeZoneInfo.ConvertTime(new DateTimeOffset(jwtToken.IssuedAt,TimeSpan.Zero), moscowTimeZone),
+				DateTimeOffset.FromUnixTimeSeconds(expiration ?? 0));
 		}
 
 		public static async Task UpdateMetadata(params long[] startRegions)
@@ -179,13 +225,14 @@ namespace VotingFilesDownloader
 						.Single();
 					foreach(var file in files.Data)
 					{
-						var data = await _apiClient.DownloadTransactionFile(contract, file);
-						Console.WriteLine("File {0}", file);
-						var hash = CalculateSha256(data);
 						var dbVotingFile = dbVoting.VotingFiles.Where(x => x.FileName == file)
 							.SingleOrDefault();
 						if (dbVotingFile is null)
 						{
+							var data = await _apiClient.DownloadTransactionFile(contract, file);
+							Console.WriteLine("File {0}", file);
+							var hash = CalculateSha256(data);
+
 							dbVotingFile = new DbVotingFile()
 							{
 								Voting = dbVoting,
@@ -199,12 +246,19 @@ namespace VotingFilesDownloader
 						}
 						else
 						{
+							if (!_redownloadAll)
+							{
+								continue;
+							}
+							var data = await _apiClient.DownloadTransactionFile(contract, file);
+							Console.WriteLine("File {0}", file);
+							var hash = CalculateSha256(data);
+
 							if (!MemoryExtensions.SequenceEqual<byte>(hash, dbVotingFile.Sha256))
 							{
 								Console.WriteLine("Detected anomaly {0}", file);
 								SaveFile(contract, file + "-anomaly" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), data);
-							}
-							
+							}		
 						}
 					}
 

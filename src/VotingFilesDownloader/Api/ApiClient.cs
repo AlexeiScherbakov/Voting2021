@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -19,10 +20,20 @@ namespace VotingFilesDownloader.Api
 
 		private readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions();
 
-		public ApiClient()
-			: this(new HttpClient(), true)
-		{
+		private string _bearerToken;
 
+		public ApiClient()
+		{
+			HttpClientHandler handler = new HttpClientHandler();
+			CookieContainer container = new CookieContainer();
+			//container.Add(new Cookie(
+			//	"session-cookie",
+
+			//	"/",
+			//	"stat.vybory.gov.ru"));
+			handler.CookieContainer = container;
+			_httpClient = new HttpClient(handler);
+			_ownsHttpClient = true;
 		}
 
 		public ApiClient(HttpClient httpClient,bool ownsHttpClient)
@@ -56,13 +67,20 @@ namespace VotingFilesDownloader.Api
 			return new Uri(_baseUrl, path);
 		}
 
+		public void SetAuthorization(string auth)
+		{
+			_bearerToken = auth;
+		}
 
-
-		private async Task<T> PerformRequestAsync<T>(string path)
+		private async Task<T> PerformRequestAsync<T>(string path,bool auth=false)
 		{
 			await Task.Delay(200);
 			var uri = GetAbsoluteUrl(path);
 			using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+			if (auth)
+			{
+				httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", "Bearer " + _bearerToken);
+			}
 			using var httpResponseMessage = await _httpClient.SendAsync(httpRequestMessage);
 #if DEBUG
 			var json = await httpResponseMessage.Content.ReadAsStringAsync();
@@ -109,8 +127,9 @@ namespace VotingFilesDownloader.Api
 
 		public async Task<BaseResponse<string[]>> GetContractTransactionsFiles(string contractId)
 		{
-			var path = $"api/transactions/filenames/" + contractId;
-			return await PerformRequestAsync<BaseResponse<string[]>>(path);
+			var newPath = $"api/files/" + contractId;
+			//var path = $"api/transactions/filenames/" + contractId;
+			return await PerformRequestAsync<BaseResponse<string[]>>(newPath, true);
 		}
 
 		public async Task<byte[]> DownloadTransactionFile(string contractId,string fileName)
