@@ -72,16 +72,21 @@ namespace VotingFilesDownloader.Api
 			_bearerToken = auth;
 		}
 
-		private async Task<T> PerformRequestAsync<T>(string path,bool auth=false)
+		private async Task<HttpResponseMessage> GetResponse(HttpMethod httpMethod, string path,bool auth)
 		{
 			await Task.Delay(200);
 			var uri = GetAbsoluteUrl(path);
-			using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+			using var httpRequestMessage = new HttpRequestMessage(httpMethod, uri);
 			if (auth)
 			{
 				httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", "Bearer " + _bearerToken);
 			}
-			using var httpResponseMessage = await _httpClient.SendAsync(httpRequestMessage);
+			return await _httpClient.SendAsync(httpRequestMessage);
+		}
+
+		private async Task<T> PerformRequestAsync<T>(string path,bool auth=false)
+		{
+			using var httpResponseMessage = await GetResponse(HttpMethod.Get, path, auth);
 #if DEBUG
 			var json = await httpResponseMessage.Content.ReadAsStringAsync();
 			T ret;
@@ -135,9 +140,10 @@ namespace VotingFilesDownloader.Api
 		public async Task<byte[]> DownloadTransactionFile(string contractId,string fileName)
 		{
 			await Task.Delay(200);
-			var path = $"download/{contractId}/{fileName}";
-			var uri = GetAbsoluteUrl(path);
-			return await _httpClient.GetByteArrayAsync(uri);
+			var newPath = $"api/files/{fileName}/contract/{contractId}/download";
+			//var path = $"download/{contractId}/{fileName}";
+			using var response = await GetResponse(HttpMethod.Post, newPath, true);
+			return await response.Content.ReadAsByteArrayAsync();
 		}
 	}
 }
