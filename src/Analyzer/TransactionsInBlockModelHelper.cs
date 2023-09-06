@@ -39,7 +39,8 @@ namespace Analyzer
 			{
 				OxyPlot.Series.LineSeries lineSeries = new()
 				{
-					Title = name
+					Title = name,
+					CanTrackerInterpolatePoints = false
 				};
 				foreach (var point in points)
 				{

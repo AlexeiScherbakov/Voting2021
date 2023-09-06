@@ -20,9 +20,9 @@ namespace BlockchainVerifier
 		static void Main(string[] args)
 		{
 			// внешний SSD, временная директория для sqlite
-			System.Environment.SetEnvironmentVariable("TEMP", "E:\\temp", EnvironmentVariableTarget.Process);
+			//System.Environment.SetEnvironmentVariable("TEMP", "E:\\temp", EnvironmentVariableTarget.Process);
 
-			string basePath = @"e:\blockchain_data\blockchain_dump_3dayend\";
+			string basePath = @"y:\!blockchain\2022-11-21";
 
 
 			var dbFileName = Path.Combine(basePath, "research.db3");
@@ -31,7 +31,7 @@ namespace BlockchainVerifier
 			b.ForeignKeys = true;
 			b.DataSource = dbFileName;
 			b.DefaultTimeout = 10 * 60;
-			b.JournalMode = SQLiteJournalModeEnum.Wal;
+			//b.JournalMode = SQLiteJournalModeEnum.Wal;
 			var connectionString = b.ToString();
 			var create = !File.Exists(dbFileName);
 
@@ -42,7 +42,7 @@ namespace BlockchainVerifier
 			int transactionCount = 0;
 			HashSet<string> set = new HashSet<string>();
 
-			for (int i = 1; i <= 4; i++)
+			for (int i = 1; i <= 2; i++)
 			{
 				var shardDirectory = Path.Combine(basePath, i.ToString());
 				var dbFile = Path.Combine(shardDirectory, "blockchain.db3");
@@ -53,7 +53,6 @@ namespace BlockchainVerifier
 					b = new();
 					b.BinaryGUID = true;
 					b.ForeignKeys = false;
-					b.JournalMode = System.Data.SQLite.SQLiteJournalModeEnum.Wal;
 					b.DataSource = dbFile;
 					shardStateDatabaseConnectionString = b.ToString();
 				}
@@ -81,7 +80,7 @@ namespace BlockchainVerifier
 				}
 			}
 
-			for (int i = 1; i <= 4; i++)
+			for (int i = 1; i <= 2; i++)
 			{
 				Console.WriteLine("Begin processing shard {0} data", i);
 				var shardDirectory = Path.Combine(basePath, i.ToString());
@@ -92,11 +91,21 @@ namespace BlockchainVerifier
 				
 				while (!r.Eof)
 				{
-					var record = r.ReadRecord();
-					if (record.Item2 is null)
+					(string, byte[], Dictionary<string, string>) record = default;
+					try
 					{
+						record = r.ReadRecord();
+						if (record.Item2 is null)
+						{
+							continue;
+						}
+					}
+					catch(Exception e)
+					{
+						Console.WriteLine("Unexpected Eof={0}", r.Eof);
 						continue;
 					}
+					
 					var tx = WavesEnterprise.Transaction.Parser.ParseFrom(record.Item2);
 
 					//var jsonString = formatter.Format(tx);

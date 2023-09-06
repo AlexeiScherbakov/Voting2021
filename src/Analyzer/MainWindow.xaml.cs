@@ -61,7 +61,7 @@ namespace Analyzer
 		{
 			OpenFileDialog o = new OpenFileDialog();
 			o.Filter = "*.db3|*.db3";
-			if (o.ShowDialog() != true)
+			if (o.ShowDialog(this) != true)
 			{
 				return;
 			}

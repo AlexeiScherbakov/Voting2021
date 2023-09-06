@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -91,7 +92,13 @@ namespace BlockchainVerifier
 			JsonFormatter formatter = new JsonFormatter(new JsonFormatter.Settings(false));
 			Parallel.ForEach(objs, obj =>
 			 {
-				 var dbBlock = cache[obj.Shard][obj.Height];
+				 var dbShard = cache[obj.Shard];
+
+				 if (!dbShard.TryGetValue(obj.Height,out var dbBlock))
+				 {
+					 Console.WriteLine("Height not found {0} (not final dump)", obj.Height);
+					 return; 
+				 }
 
 				 DbBlockchainTransaction tx = new DbBlockchainTransaction()
 				 {
@@ -103,7 +110,7 @@ namespace BlockchainVerifier
 					 ContractId = Base58.EncodePlain(obj.Transaction.GetContractId()),
 					 Timestamp = obj.Transaction.GetTimestamp(),
 					 NestedTimestamp = obj.Transaction.GetNestedTx()?.Timestamp ?? 0,
-					 OperationType = GetOperationType(obj.Transaction),
+					 OperationType = obj.Transaction.GetOperationType(),
 					 Type = obj.IsRollback ? TransationRecordType.Rollback : TransationRecordType.Transaction
 				 };
 				 lock (_transactionListBuffer)
@@ -120,36 +127,7 @@ namespace BlockchainVerifier
 			tr.Commit();
 		}
 
-		private string GetOperationType(WavesEnterprise.Transaction tx)
-		{
-			if (tx.ExecutedContractTransaction is not null)
-			{
-				var inner = tx.ExecutedContractTransaction.Tx;
-				if (inner.CreateContractTransaction is not null)
-				{
-					return string.Format("Executed CreateContractTransaction {0}", inner.CreateContractTransaction.ContractName);
-				}
-				if (inner.CallContractTransaction is not null)
-				{
-					var operationName = inner.CallContractTransaction.Params.Where(x => x.Key == "operation").SingleOrDefault();
-					return string.Format("Executed CallContractTransaction {0}", operationName?.StringValue);
-				}
-				if (inner.UpdateContractTransaction is not null)
-				{
-					return "Executed UpdateContractTransaction";
-				}
-				return "Unknown ExecutedContractTransaction";
-			}
-			if (tx.CreateContractTransaction is not null)
-			{
-				return "CreateContractTransaction";
-			}
-			if (tx.CallContractTransaction is not null)
-			{
-				return "CallContractTransaction";
-			}
-			return "unknown";
-		}
+		
 
 		public void AddTransaction(int shard,WavesEnterprise.Transaction transaction,Dictionary<string,string> headers)
 		{

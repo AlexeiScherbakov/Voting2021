@@ -21,11 +21,11 @@ namespace DatabaseComparer
 		static int Main(string[] args)
 		{
 			// внешний SSD, временная директория для sqlite
-			System.Environment.SetEnvironmentVariable("TEMP", "E:\\temp", EnvironmentVariableTarget.Process);
+			//System.Environment.SetEnvironmentVariable("TEMP", "E:\\temp", EnvironmentVariableTarget.Process);
 
-			const string votingDatabaseFile = @"e:\blockchain_data\stat_downloads\votings.db3";
+			const string votingDatabaseFile = @"e:\votings\votings.db3";
 			//const string researchDatabaseFile = @"e:\blockchain_data\blockchain_dump_final\research.db3";
-			const string researchDatabaseFile = @"e:\blockchain_data\blockchain_dump_3dayend\research.db3";
+			const string researchDatabaseFile = @"e:\votings\research.db3";
 			
 			VotingFilesDatabase votingFilesDatabase = null;
 			{
@@ -45,7 +45,16 @@ namespace DatabaseComparer
 				var connectionString = b.ToString();
 				researchDatabase = ResearchDatabase.Sqlite(connectionString, false);
 			}
-			return CompareDatabases(votingFilesDatabase, researchDatabase);
+			int err = CompareDatabases(votingFilesDatabase, researchDatabase);
+			if (err!=0)
+			{
+				Console.WriteLine("Error");
+			}
+			else
+			{
+				Console.WriteLine("OK!");
+			}
+			return err;
 		}
 
 		static int CompareDatabases(VotingFilesDatabase votingFilesDatabase, ResearchDatabase researchDatabase)

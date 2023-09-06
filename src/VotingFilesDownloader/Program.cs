@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -45,14 +46,8 @@ namespace VotingFilesDownloader
 			return path;
 		}
 
-		private static int RunApp(CommandLineOptions options)
+		private static void Initialize()
 		{
-			if (options.Token is not null)
-			{
-				WriteTokenInfo(options.Token);
-			}
-			_redownloadAll = options.RedownloadAll;
-
 			var path = GetCurrentDirectory();
 			Console.WriteLine("Current Directory: {0}", path);
 			var dataDirectory = Path.Combine(path, "data");
@@ -60,27 +55,50 @@ namespace VotingFilesDownloader
 			{
 				Directory.CreateDirectory(dataDirectory);
 			}
+
 			_filesDirectory = Path.Combine(dataDirectory, "files");
 			var dbFileName = Path.Combine(dataDirectory, "votings.db3");
-			System.Data.SQLite.SQLiteConnectionStringBuilder b = new();
-			b.BinaryGUID = true;
-			b.ForeignKeys = true;
-			b.DataSource = dbFileName;
+			System.Data.SQLite.SQLiteConnectionStringBuilder b = new()
+			{
+				BinaryGUID = true,
+				ForeignKeys = true,
+				DataSource = dbFileName
+			};
 			var connectionString = b.ToString();
 			bool create = !File.Exists(dbFileName);
 			_votingFilesDatabase = VotingFilesDatabase.Sqlite(connectionString, create ? VotingFilesDatabase.Mode.Create : VotingFilesDatabase.Mode.Update);
 			_apiClient = new ApiClient();
+		}
+
+		private static int RunApp(CommandLineOptions options)
+		{
+			if (options.Token is not null)
+			{
+				WriteTokenInfo(options.Token);
+			}
+			_redownloadAll = options.RedownloadAll;
+			Initialize();
+
+
+			var cert = _apiClient.GetCertificate().GetAwaiter().GetResult();
+			Console.WriteLine($"Server certificate {cert.Item1},{cert.Item2}");
 
 			if (options.Token is not null)
 			{
 				_apiClient.SetAuthorization(options.Token);
 			}
+
+			if (!string.IsNullOrEmpty(options.ContractId))
+			{
+				DownloadContractFiles(options.ContractId).Wait();
+			}
+			else
+			{
+				UpdateMetadata(39, 40, 46, 53, 60, 70, 76).Wait();
+				DownloadFiles().Wait();
+			}
 			
-			UpdateMetadata(39, 40, 46, 53, 60, 70, 76).Wait();
-			DownloadFiles().Wait();
-
 			Console.WriteLine("Время выполнения {0}", DateTimeOffset.Now - _startTime);
-
 			return 0;
 		}
 
@@ -226,55 +244,65 @@ namespace VotingFilesDownloader
 
 			foreach(var contract in contracts)
 			{
-				var files = await _apiClient.GetContractTransactionsFiles(contract);
-				using (var session = _votingFilesDatabase.OpenSession())
-				using (var tr=session.BeginTransaction())
+				await DownloadContractFiles(contract);
+			}
+		}
+
+		public static async Task DownloadContractFiles(string contract)
+		{
+			var files = await _apiClient.GetContractTransactionsFiles(contract);
+			using (var session = _votingFilesDatabase.OpenSession())
+			using (var tr = session.BeginTransaction())
+			{
+				var dbVoting = session.Query<DbVoting>()
+					.Where(x => x.ContractId == contract)
+					.Fetch(x => x.VotingFiles)
+					.SingleOrDefault();
+
+				if (dbVoting is null)
 				{
-					var dbVoting = session.Query<DbVoting>()
-						.Where(x => x.ContractId == contract)
-						.Fetch(x => x.VotingFiles)
-						.Single();
-					foreach(var file in files.Data)
+					Console.WriteLine("Для использования этой функции необходимо вначале скачать список голосований");
+					return;
+				}
+				foreach (var file in files.Data)
+				{
+					var dbVotingFile = dbVoting.VotingFiles.Where(x => x.FileName == file)
+						.SingleOrDefault();
+					if (dbVotingFile is null)
 					{
-						var dbVotingFile = dbVoting.VotingFiles.Where(x => x.FileName == file)
-							.SingleOrDefault();
-						if (dbVotingFile is null)
+						var data = await _apiClient.DownloadTransactionFile(contract, file);
+						Console.WriteLine("File {0}", file);
+						var hash = CalculateSha256(data);
+
+						dbVotingFile = new DbVotingFile()
 						{
-							var data = await _apiClient.DownloadTransactionFile(contract, file);
-							Console.WriteLine("File {0}", file);
-							var hash = CalculateSha256(data);
+							Voting = dbVoting,
+							FileName = file,
+							Length = data.Length,
+							Sha256 = hash
+						};
+						session.Save(dbVotingFile);
 
-							dbVotingFile = new DbVotingFile()
-							{
-								Voting = dbVoting,
-								FileName = file,
-								Length = data.Length,
-								Sha256 = hash
-							};
-							session.Save(dbVotingFile);
-
-							SaveFile(contract, file, data);
+						SaveFile(contract, file, data);
+					}
+					else
+					{
+						if (!_redownloadAll)
+						{
+							continue;
 						}
-						else
-						{
-							if (!_redownloadAll)
-							{
-								continue;
-							}
-							var data = await _apiClient.DownloadTransactionFile(contract, file);
-							Console.WriteLine("File {0}", file);
-							var hash = CalculateSha256(data);
+						var data = await _apiClient.DownloadTransactionFile(contract, file);
+						Console.WriteLine("File {0}", file);
+						var hash = CalculateSha256(data);
 
-							if (!MemoryExtensions.SequenceEqual<byte>(hash, dbVotingFile.Sha256))
-							{
-								Console.WriteLine("Detected anomaly {0}", file);
-								SaveFile(contract, file + "-anomaly" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), data);
-							}		
+						if (!MemoryExtensions.SequenceEqual<byte>(hash, dbVotingFile.Sha256))
+						{
+							Console.WriteLine("Detected anomaly {0}", file);
+							SaveFile(contract, file + "-anomaly" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss"), data);
 						}
 					}
-
-					tr.Commit();
 				}
+				tr.Commit();
 			}
 		}
 

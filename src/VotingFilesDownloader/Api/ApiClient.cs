@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -84,6 +85,38 @@ namespace VotingFilesDownloader.Api
 			return await _httpClient.SendAsync(httpRequestMessage);
 		}
 
+		public async Task<(string,string)> GetCertificate()
+		{
+			string subject = null;
+			string issuer = null;
+			using var handler = new HttpClientHandler();
+			X509Certificate ret = null;
+			handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, error) => {
+				subject = cert.Subject;
+				issuer = cert.Issuer;
+				return true;
+			};
+
+			try
+			{
+				using (HttpClient client = new HttpClient(handler))
+				{
+					using (HttpResponseMessage response = await client.GetAsync("https://stat.vybory.gov.ru/"))
+					{
+						using (HttpContent content = response.Content)
+						{
+						}
+					}
+				}
+			}
+			catch (Exception)
+			{
+
+			}
+			
+			return (subject, issuer);
+		}
+
 		private async Task<T> PerformRequestAsync<T>(string path,bool auth=false)
 		{
 			using var httpResponseMessage = await GetResponse(HttpMethod.Get, path, auth);
@@ -143,6 +176,7 @@ namespace VotingFilesDownloader.Api
 			var newPath = $"api/files/{fileName}/contract/{contractId}/download";
 			//var path = $"download/{contractId}/{fileName}";
 			using var response = await GetResponse(HttpMethod.Post, newPath, true);
+			response.EnsureSuccessStatusCode();
 			return await response.Content.ReadAsByteArrayAsync();
 		}
 	}

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Voting2021.BlockchainWatcher": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:60507;http://localhost:60508"
+    }
+  }
+}

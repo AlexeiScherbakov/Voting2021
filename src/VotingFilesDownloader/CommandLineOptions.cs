@@ -9,5 +9,8 @@ namespace VotingFilesDownloader
 
 		[Option("redownloadAll")]
 		public bool RedownloadAll { get; set; }
+
+		[Option("contractId")]
+		public string ContractId { get; set; }
 	}
 }
