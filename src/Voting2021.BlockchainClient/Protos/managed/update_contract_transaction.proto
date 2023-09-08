@@ -24,4 +24,5 @@ message UpdateContractTransaction {
   ValidationPolicy validation_policy = 10;
   ContractApiVersion api_version = 11;
   repeated bytes proofs = 12;
+  bytes sender_address = 13;
 }

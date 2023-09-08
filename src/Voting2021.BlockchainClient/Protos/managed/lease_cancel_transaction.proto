@@ -6,6 +6,8 @@ option java_package = "com.wavesenterprise.transaction.protobuf.lease";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
+import "atomic_badge.proto";
+
 message LeaseCancelTransaction {
   bytes id = 1;
   int32 chain_id = 2;
@@ -13,5 +15,7 @@ message LeaseCancelTransaction {
   int64 fee = 4;
   int64 timestamp = 5;
   bytes lease_id = 6;
-  repeated bytes proofs = 7;
+  AtomicBadge atomic_badge = 7;
+  repeated bytes proofs = 8;
+  bytes sender_address = 9;
 }

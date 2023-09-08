@@ -18,4 +18,5 @@ message SetScriptTransaction {
   int64 fee = 7;
   int64 timestamp = 8;
   repeated bytes proofs = 9;
+  bytes sender_address = 10;
 }

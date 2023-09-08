@@ -18,4 +18,5 @@ message DisableContractTransaction {
   google.protobuf.BytesValue fee_asset_id = 6;
   AtomicBadge atomic_badge = 7;
   repeated bytes proofs = 8;
+  bytes sender_address = 9;
 }

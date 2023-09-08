@@ -8,6 +8,7 @@ option go_package = "wavesenterprise.com/weproto";
 
 import "google/protobuf/wrappers.proto";
 import "transfer.proto";
+import "atomic_badge.proto";
 
 message MassTransferTransaction {
   bytes id = 1;
@@ -18,5 +19,7 @@ message MassTransferTransaction {
   int64 fee = 6;
   bytes attachment = 7;
   google.protobuf.BytesValue fee_asset_id = 8;
-  repeated bytes proofs = 9;
+  AtomicBadge atomic_badge = 9;
+  repeated bytes proofs = 10;
+  bytes sender_address = 11;
 }

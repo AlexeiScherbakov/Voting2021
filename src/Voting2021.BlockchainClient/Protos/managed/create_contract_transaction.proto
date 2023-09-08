@@ -9,6 +9,7 @@ option go_package = "wavesenterprise.com/weproto";
 import "google/protobuf/wrappers.proto";
 import "contract_api_version.proto";
 import "atomic_badge.proto";
+import "contract_transfer_in.proto";
 import "validation_policy.proto";
 import "data_entry.proto";
 
@@ -25,5 +26,7 @@ message CreateContractTransaction {
   AtomicBadge atomic_badge = 10;
   ValidationPolicy validation_policy = 11;
   ContractApiVersion api_version = 12;
-  repeated bytes proofs = 13;
+  repeated ContractTransferIn payments = 13;
+  repeated bytes proofs = 14;
+  bytes sender_address = 15;
 }

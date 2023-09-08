@@ -18,4 +18,5 @@ message PermitTransaction {
   PermissionOp permission_op = 6;
   AtomicBadge atomic_badge = 7;
   repeated bytes proofs = 8;
+  bytes sender_address = 9;
 }

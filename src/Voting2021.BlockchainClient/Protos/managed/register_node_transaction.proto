@@ -8,6 +8,7 @@ option go_package = "wavesenterprise.com/weproto";
 
 import "google/protobuf/wrappers.proto";
 import "op_type.proto";
+import "atomic_badge.proto";
 
 message RegisterNodeTransaction {
   bytes id = 1;
@@ -17,5 +18,7 @@ message RegisterNodeTransaction {
   OpType op_type = 5;
   int64 timestamp = 6;
   int64 fee = 7;
-  repeated bytes proofs = 8;
+  AtomicBadge atomic_badge = 8;
+  repeated bytes proofs = 9;
+  bytes sender_address = 10;
 }

@@ -6,6 +6,8 @@ option java_package = "com.wavesenterprise.transaction.protobuf.assets";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
+import "atomic_badge.proto";
+
 message ReissueTransaction {
   bytes id = 1;
   int32 chain_id = 2;
@@ -15,5 +17,7 @@ message ReissueTransaction {
   bool reissuable = 6;
   int64 fee = 7;
   int64 timestamp = 8;
-  repeated bytes proofs = 9;
+  AtomicBadge atomic_badge = 9;
+  repeated bytes proofs = 10;
+  bytes sender_address = 11;
 }

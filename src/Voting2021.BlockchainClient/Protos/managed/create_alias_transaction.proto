@@ -7,6 +7,7 @@ option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
 import "google/protobuf/wrappers.proto";
+import "atomic_badge.proto";
 
 message CreateAliasTransaction {
   bytes id = 1;
@@ -15,5 +16,7 @@ message CreateAliasTransaction {
   int64 fee = 4;
   int64 timestamp = 5;
   google.protobuf.BytesValue fee_asset_id = 6;
-  repeated bytes proofs = 7;
+  AtomicBadge atomic_badge = 7;
+  repeated bytes proofs = 8;
+  bytes sender_address = 9;
 }

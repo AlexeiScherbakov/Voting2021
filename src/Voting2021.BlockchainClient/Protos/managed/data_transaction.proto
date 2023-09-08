@@ -8,6 +8,7 @@ option go_package = "wavesenterprise.com/weproto";
 
 import "data_entry.proto";
 import "google/protobuf/wrappers.proto";
+import "atomic_badge.proto";
 
 message DataTransaction {
   bytes id = 1;
@@ -17,5 +18,7 @@ message DataTransaction {
   int64 timestamp = 5;
   int64 fee = 6;
   google.protobuf.BytesValue fee_asset_id = 7;
-  repeated bytes proofs = 8;
+  AtomicBadge atomic_badge = 8;
+  repeated bytes proofs = 9;
+  bytes sender_address = 10;
 }

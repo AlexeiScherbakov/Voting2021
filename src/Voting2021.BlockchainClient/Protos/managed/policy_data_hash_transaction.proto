@@ -19,4 +19,5 @@ message PolicyDataHashTransaction {
   google.protobuf.BytesValue fee_asset_id = 7;
   AtomicBadge atomic_badge = 8;
   repeated bytes proofs = 9;
+  bytes sender_address = 10;
 }

@@ -7,6 +7,7 @@ option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
 import "google/protobuf/wrappers.proto";
+import "atomic_badge.proto";
 
 message LeaseTransaction {
   bytes id = 1;
@@ -16,5 +17,7 @@ message LeaseTransaction {
   int64 amount = 5;
   int64 fee = 6;
   int64 timestamp = 7;
-  repeated bytes proofs = 8;
+  AtomicBadge atomic_badge = 8;
+  repeated bytes proofs = 9;
+  bytes sender_address = 10;
 }

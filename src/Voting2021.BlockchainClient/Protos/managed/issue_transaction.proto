@@ -6,6 +6,7 @@ option java_package = "com.wavesenterprise.transaction.protobuf.assets";
 option csharp_namespace = "WavesEnterprise";
 option go_package = "wavesenterprise.com/weproto";
 
+import "atomic_badge.proto";
 import "google/protobuf/wrappers.proto";
 
 message IssueTransaction {
@@ -19,6 +20,8 @@ message IssueTransaction {
   bool reissuable = 8;
   int64 fee = 9;
   int64 timestamp = 10;
-  google.protobuf.BytesValue script = 11;
-  repeated bytes proofs = 12;
+  AtomicBadge atomic_badge = 11;
+  google.protobuf.BytesValue script = 12;
+  repeated bytes proofs = 13;
+  bytes sender_address = 14;
 }

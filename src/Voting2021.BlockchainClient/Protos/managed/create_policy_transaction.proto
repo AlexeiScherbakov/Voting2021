@@ -21,4 +21,5 @@ message CreatePolicyTransaction {
   google.protobuf.BytesValue fee_asset_id = 9;
   AtomicBadge atomic_badge = 10;
   repeated bytes proofs = 11;
+  bytes sender_address = 12;
 }

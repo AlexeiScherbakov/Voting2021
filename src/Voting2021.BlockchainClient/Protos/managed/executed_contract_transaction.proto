@@ -9,6 +9,7 @@ option go_package = "wavesenterprise.com/weproto";
 import "executable_contract_transaction.proto";
 import "data_entry.proto";
 import "validation_proof.proto";
+import "contract_asset_operation.proto";
 
 message ExecutedContractTransaction {
   bytes id = 1;
@@ -18,5 +19,7 @@ message ExecutedContractTransaction {
   bytes results_hash = 5;
   repeated ValidationProof validation_proofs = 6;
   int64 timestamp = 7;
-  repeated bytes proofs = 8;
+  repeated ContractAssetOperation asset_operations = 8;
+  repeated bytes proofs = 9;
+  bytes sender_address = 10;
 }

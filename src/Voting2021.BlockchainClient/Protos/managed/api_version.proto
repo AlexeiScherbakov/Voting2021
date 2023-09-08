@@ -8,5 +8,5 @@ extend google.protobuf.MessageOptions {
 }
 
 message CurrentContractApiVersion {
-  option (contract_api_version) = "1.2";
+  option (contract_api_version) = "1.10-1.12.3";
 }

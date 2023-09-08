@@ -17,4 +17,5 @@ message SetAssetScriptTransaction {
   int64 fee = 6;
   int64 timestamp = 7;
   repeated bytes proofs = 8;
+  bytes sender_address = 9;
 }

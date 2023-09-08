@@ -16,4 +16,5 @@ message AtomicTransaction {
   repeated AtomicInnerTransaction transactions = 4;
   int64 timestamp = 5;
   repeated bytes proofs = 6;
+  bytes sender_address = 7;
 }
